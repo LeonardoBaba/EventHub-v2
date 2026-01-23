@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    image: ${DOCKER_USERNAME}/eventhub:latest
+    container_name: eventhub-app
+    ports:
+      - "15000:15000"
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/eventhubdb
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET:-123456}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - eventhub-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: eventhub-db
+    environment:
+      - POSTGRES_DB=eventhubdb
+      - POSTGRES_USER=${DB_USERNAME:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eventhub-net
+
+volumes:
+  postgres_data:
+
+networks:
+  eventhub-net:
