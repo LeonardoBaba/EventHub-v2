@@ -1,5 +1,6 @@
 package br.com.baba.eventHub.core.model;
 
+import br.com.baba.eventHub.core.enums.TicketStatusEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,9 +31,14 @@ public class Ticket {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private TicketStatusEnum statusEnum;
+
     public Ticket(User user, Event event) {
         this.ticketDate = LocalDateTime.now();
         this.user = user;
         this.event = event;
+        this.statusEnum = TicketStatusEnum.PENDING;
     }
 }

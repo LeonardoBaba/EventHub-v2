@@ -1,6 +1,8 @@
 package br.com.baba.eventHub.core.service;
 
+import br.com.baba.eventHub.core.dto.TicketFormDTO;
 import br.com.baba.eventHub.core.enums.EventStatusEnum;
+import br.com.baba.eventHub.core.enums.TicketStatusEnum;
 import br.com.baba.eventHub.core.exceptions.EventException;
 import br.com.baba.eventHub.core.interfaces.IEmail;
 import br.com.baba.eventHub.core.model.Event;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,10 +27,13 @@ public class TicketService {
     private EventRepository eventRepository;
 
     @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
     private IEmail email;
 
     @Transactional
-    public void purchaseTicket(UUID eventId, User user) throws EventException {
+    public void purchaseTicket(UUID eventId, User user, TicketFormDTO ticketFormDTO) throws EventException {
         Event event = eventRepository.findByIdWithLock(eventId)
                 .orElseThrow(() -> new EventException("Event not found"));
         if (event.getStatusEnum() != EventStatusEnum.ACTIVE) {
@@ -36,22 +42,23 @@ public class TicketService {
         if (ticketRepository.existsByUserAndEventId(user, eventId)) {
             throw new EventException("User already has a ticket for this event");
         }
-        long currentTickets = ticketRepository.countByEventId(eventId);
+        long currentTickets = getTicketCountPerEvent(eventId);
         if (currentTickets >= event.getCapacity()) {
             throw new EventException("Event is full");
         }
         Ticket ticket = new Ticket(user, event);
         ticketRepository.save(ticket);
-        notifyUser(ticket);
+        paymentService.savePayment(ticket, ticketFormDTO);
         if (currentTickets + 1 == event.getCapacity()) {
             notifyOrganizerSoldOut(event);
         }
     }
 
     public int getTicketCountPerEvent(UUID eventId) {
-        return Math.toIntExact(ticketRepository.countByEventId(eventId));
+        return Math.toIntExact(ticketRepository.countByEventIdAndStatusIn(eventId, List.of(TicketStatusEnum.CONFIRMED, TicketStatusEnum.PENDING)));
     }
 
+    @SuppressWarnings("unused")
     private void notifyUser(Ticket ticket) {
         email.send(
                 ticket.getUser().getEmail(),
