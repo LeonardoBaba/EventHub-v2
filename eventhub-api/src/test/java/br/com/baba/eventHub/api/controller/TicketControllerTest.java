@@ -1,5 +1,6 @@
 package br.com.baba.eventHub.api.controller;
 
+import br.com.baba.eventHub.core.dto.TicketFormDTO;
 import br.com.baba.eventHub.core.model.User;
 import br.com.baba.eventHub.core.service.TicketService;
 import org.junit.jupiter.api.DisplayName;
@@ -34,14 +35,15 @@ class TicketControllerTest {
     private User user;
 
     @Test
-    @DisplayName("Should return OK when purchasing a ticket")
-    void shouldReturnOkWhenPurchasingTicket() throws Exception {
+    @DisplayName("Should return Accepted when purchasing a ticket")
+    void shouldReturnAcceptedWhenPurchasingTicket() throws Exception {
         UUID eventId = UUID.randomUUID();
+        TicketFormDTO ticketFormDTO = new TicketFormDTO("123", 1);
         when(authentication.getPrincipal()).thenReturn(user);
 
-        ResponseEntity response = ticketController.purchaseTicket(eventId, authentication);
+        ResponseEntity response = ticketController.purchaseTicket(eventId, ticketFormDTO, authentication);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(ticketService).purchaseTicket(eventId, user);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+        verify(ticketService).purchaseTicket(eventId, user, ticketFormDTO);
     }
 }
