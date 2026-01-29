@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -58,7 +59,6 @@ public class TicketService {
         return Math.toIntExact(ticketRepository.countByEventIdAndStatusIn(eventId, List.of(TicketStatusEnum.CONFIRMED, TicketStatusEnum.PENDING)));
     }
 
-    @SuppressWarnings("unused")
     private void notifyUser(Ticket ticket) {
         email.send(
                 ticket.getUser().getEmail(),
@@ -81,5 +81,16 @@ public class TicketService {
                             """.formatted(event.getTitle())
             );
         }
+    }
+
+    @Transactional
+    public void updateTicketStatus(UUID uuid, boolean confirmed) {
+        Optional<Ticket> ticket = ticketRepository.findById(uuid);
+        ticket.ifPresent(t -> {
+            t.setStatusEnum(confirmed ? TicketStatusEnum.CONFIRMED : TicketStatusEnum.CANCELLED);
+            if (confirmed) {
+                notifyUser(t);
+            }
+        });
     }
 }
