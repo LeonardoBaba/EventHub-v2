@@ -22,7 +22,7 @@ public class TicketController {
     private TicketService ticketService;
 
     @PostMapping("/api/events/{eventId}/tickets")
-    public ResponseEntity purchaseTicket(@PathVariable UUID eventId, @Valid @RequestBody TicketFormDTO ticketFormDTO, Authentication authentication) throws EventException {
+    public ResponseEntity purchaseTicket(@PathVariable("eventId") UUID eventId, @Valid @RequestBody TicketFormDTO ticketFormDTO, Authentication authentication) throws EventException {
         User user = (User) authentication.getPrincipal();
         ticketService.purchaseTicket(eventId, user, ticketFormDTO);
         return ResponseEntity.accepted().build();

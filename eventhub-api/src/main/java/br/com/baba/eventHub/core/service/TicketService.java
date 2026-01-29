@@ -48,7 +48,7 @@ public class TicketService {
         }
         Ticket ticket = new Ticket(user, event);
         ticketRepository.save(ticket);
-        paymentService.savePayment(ticket, ticketFormDTO);
+        paymentService.processPayment(ticket, ticketFormDTO);
         if (currentTickets + 1 == event.getCapacity()) {
             notifyOrganizerSoldOut(event);
         }
