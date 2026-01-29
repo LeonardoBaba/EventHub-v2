@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -81,5 +82,11 @@ public class TicketService {
                             """.formatted(event.getTitle())
             );
         }
+    }
+
+    @Transactional
+    public void updateTicketStatus(UUID uuid, boolean confirmed) {
+        Optional<Ticket> ticket = ticketRepository.findById(uuid);
+        ticket.ifPresent(t -> t.setStatusEnum(confirmed ? TicketStatusEnum.CONFIRMED : TicketStatusEnum.CANCELLED));
     }
 }
