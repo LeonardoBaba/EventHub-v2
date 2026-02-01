@@ -39,7 +39,8 @@ Para rodar o projeto, você precisará de:
 DB_USERNAME=
 DB_PASSWORD=
 JWT_SECRET=
-SERVER_PORT=
+API_SERVER_PORT=
+PAYMENTS_SERVER_PORT=
 ```
 
 ## 🏃‍♂️ Como Executar

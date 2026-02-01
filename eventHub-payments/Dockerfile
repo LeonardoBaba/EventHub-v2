@@ -6,16 +6,16 @@ COPY pom.xml .
 COPY eventhub-api/pom.xml eventhub-api/
 COPY eventHub-payments/pom.xml eventHub-payments/
 
-COPY eventhub-api/src eventhub-api/src
+COPY eventHub-payments/src eventHub-payments/src
 
-RUN mvn -pl eventhub-api clean package -DskipTests
+RUN mvn -pl eventHub-payments clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-COPY --from=build /app/eventhub-api/target/*.jar app.jar
+COPY --from=build /app/eventHub-payments/target/*.jar app.jar
 
-ARG API_SERVER_PORT
-ENV API_SERVER_PORT=${API_SERVER_PORT}
+ARG PAYMENTS_SERVER_PORT
+ENV PAYMENTS_SERVER_PORT=${PAYMENTS_SERVER_PORT}
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  eventhub-api:
+    build:
+      context: .
+      dockerfile: eventhub-api/Dockerfile
+    image: eventhub-api-v2:latest
+    container_name: eventhub-api-v2
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    environment:
+      - API_SERVER_PORT=${API_PORT}
+      - DB_URL=jdbc:postgresql://db:5432/eventhubdb
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - eventhub-net
+
+  eventhub-payments:
+    build:
+      context: .
+      dockerfile: eventHub-payments/Dockerfile
+    image: eventhub-payments-v2:latest
+    container_name: eventhub-payments-v2
+    ports:
+      - "${PAYMENTS_PORT}:${PAYMENTS_PORT}"
+    environment:
+      - PAYMENTS_SERVER_PORT=${PAYMENTS_PORT}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - MONGODB_URI=${MONGODB_URI}
+      - MQ_EXCHANGE_NAME=${MQ_EXCHANGE_NAME}
+      - MQ_QUEUE_INPUT=${MQ_QUEUE_INPUT}
+      - MQ_QUEUE_OUTPUT=${MQ_QUEUE_OUTPUT}
+      - MQ_ROUTING_KEY_INPUT=${MQ_ROUTING_KEY_INPUT}
+      - MQ_ROUTING_KEY_OUTPUT=${MQ_ROUTING_KEY_OUTPUT}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - eventhub-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: eventhub-db
+    environment:
+      - POSTGRES_DB=eventhubdb
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eventhub-net
+
+  mongodb:
+    image: mongo:latest
+    container_name: eventhub-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - eventhub-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: eventhub-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - eventhub-net
+
+volumes:
+  postgres_data:
+  mongodb_data:
+
+networks:
+  eventhub-net:

@@ -68,7 +68,7 @@ class TicketServiceTest {
         ticketService.purchaseTicket(eventId, user, ticketFormDTO);
 
         verify(ticketRepository).save(any(Ticket.class));
-        verify(paymentService).savePayment(any(Ticket.class), eq(ticketFormDTO));
+        verify(paymentService).processPayment(any(Ticket.class), eq(ticketFormDTO));
     }
 
     @Test
@@ -106,7 +106,7 @@ class TicketServiceTest {
         ticketService.purchaseTicket(eventId, user, ticketFormDTO);
 
         verify(ticketRepository).save(any(Ticket.class));
-        verify(paymentService).savePayment(any(Ticket.class), eq(ticketFormDTO));
+        verify(paymentService).processPayment(any(Ticket.class), eq(ticketFormDTO));
         verify(email).send(eq("organizer@test.com"), contains("SOLD OUT"), anyString());
     }
 }
