@@ -1,0 +1,83 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: eventhub-api/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/eventhub-api:latest
+
+      - name: Build and push Payments
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: eventHub-payments/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/eventhub-payments:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update docker-compose.yml with Docker Hub images
+        run: |
+          sed -i 's|image: eventhub-api-v2:latest|image: ${{ secrets.DOCKER_USERNAME }}/eventhub-api:latest|g' docker-compose.yml
+          sed -i 's|image: eventhub-payments-v2:latest|image: ${{ secrets.DOCKER_USERNAME }}/eventhub-payments:latest|g' docker-compose.yml
+
+      - name: Copy docker-compose to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/root/eventhub"
+          overwrite: true
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /root/eventhub
+            
+            # Create .env file with all secrets
+            echo "API_PORT=${{ secrets.API_PORT }}" > .env
+            echo "PAYMENTS_PORT=${{ secrets.PAYMENTS_PORT }}" >> .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
+            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> .env
+            echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+            echo "MQ_EXCHANGE_NAME=${{ secrets.MQ_EXCHANGE_NAME }}" >> .env
+            echo "MQ_QUEUE_INPUT=${{ secrets.MQ_QUEUE_INPUT }}" >> .env
+            echo "MQ_QUEUE_OUTPUT=${{ secrets.MQ_QUEUE_OUTPUT }}" >> .env
+            echo "MQ_ROUTING_KEY_INPUT=${{ secrets.MQ_ROUTING_KEY_INPUT }}" >> .env
+            echo "MQ_ROUTING_KEY_OUTPUT=${{ secrets.MQ_ROUTING_KEY_OUTPUT }}" >> .env
+            
+            docker compose pull
+            docker compose up -d --remove-orphans --no-build
