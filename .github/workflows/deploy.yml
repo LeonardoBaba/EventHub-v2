@@ -62,7 +62,7 @@ jobs:
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /root/eventhub
+            cd /root/eventhubv2
             
             # Create .env file with all secrets
             echo "API_PORT=${{ secrets.API_PORT }}" > .env
