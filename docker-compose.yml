@@ -57,7 +57,7 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: eventhub-db
+    container_name: eventhub-db-v2
     environment:
       - POSTGRES_DB=eventhubdb
       - POSTGRES_USER=${DB_USERNAME}
@@ -74,7 +74,7 @@ services:
 
   mongodb:
     image: mongo:latest
-    container_name: eventhub-mongodb
+    container_name: eventhub-mongodb-v2
     ports:
       - "27017:27017"
     volumes:
@@ -90,7 +90,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: eventhub-rabbitmq
+    container_name: eventhub-rabbitmq-v2
     ports:
       - "5672:5672"
       - "15672:15672"
