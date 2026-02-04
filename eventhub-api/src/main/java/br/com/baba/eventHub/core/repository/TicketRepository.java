@@ -16,4 +16,6 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     long countByEventIdAndStatusIn(@Param("eventId") UUID eventId, @Param("statuses") List<TicketStatusEnum> statuses);
 
     boolean existsByUserAndEventId(User user, UUID eventId);
+
+    List<Ticket> findByStatusEnum(TicketStatusEnum statusEnum);
 }

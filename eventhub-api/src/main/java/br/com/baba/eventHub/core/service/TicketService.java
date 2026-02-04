@@ -60,13 +60,22 @@ public class TicketService {
     }
 
     private void notifyUser(Ticket ticket) {
+        String title = "Ticket Purchased Successfully";
+        String body = """
+                You bought a ticket for the event %s
+                Thank you for your purchase!
+                """;
+        if (ticket.getStatusEnum().equals(TicketStatusEnum.CANCELLED)) {
+            title = "Purchase Failed";
+            body = """
+                    Payment failed for the event %s
+                    Please check your payment information or try a different card.
+                    """;
+        }
         email.send(
                 ticket.getUser().getEmail(),
-                "Ticket Purchased Successfully",
-                """
-                        You bought a ticket for the event %s
-                        Thank you for your purchase!
-                        """.formatted(ticket.getEvent().getTitle())
+                title,
+                body.formatted(ticket.getEvent().getTitle())
         );
     }
 
@@ -88,9 +97,7 @@ public class TicketService {
         Optional<Ticket> ticket = ticketRepository.findById(uuid);
         ticket.ifPresent(t -> {
             t.setStatusEnum(confirmed ? TicketStatusEnum.CONFIRMED : TicketStatusEnum.CANCELLED);
-            if (confirmed) {
-                notifyUser(t);
-            }
+            notifyUser(t);
         });
     }
 }

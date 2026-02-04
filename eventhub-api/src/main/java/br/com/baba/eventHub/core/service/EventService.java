@@ -68,7 +68,7 @@ public class EventService {
         }
     }
 
-    @Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = 60000 * 60)
     @Transactional
     public void checkLowAttendanceWarning() {
         List<Event> events = eventRepository.findAllByStatusEnumAndDateLessThanEqual(EventStatusEnum.ACTIVE, LocalDateTime.now().plusHours(48));

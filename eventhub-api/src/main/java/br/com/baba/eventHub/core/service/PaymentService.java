@@ -13,9 +13,12 @@ import br.com.baba.eventHub.core.model.Ticket;
 import br.com.baba.eventHub.core.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -63,5 +66,16 @@ public class PaymentService implements IMessageReceive<PaymentProcessedDTO> {
             p.setProcessedDate(paymentProcessedDTO.processedDate());
         });
         ticketService.updateTicketStatus(paymentProcessedDTO.ticketID(), paymentProcessedDTO.status().equals(PaymentStatusEnum.SUCCESS));
+    }
+
+    @Scheduled(fixedRate = 60000 * 5)
+    @Transactional
+    public void checkTicketsPending() {
+        List<Payment> payments = repository.findByStatusAndCreationDateBefore(PaymentStatusEnum.PENDING, LocalDateTime.now().minusHours(1));
+        payments.forEach(p -> {
+            p.setProcessedDate(LocalDateTime.now());
+            p.setStatus(PaymentStatusEnum.TIMEOUT);
+            ticketService.updateTicketStatus(p.getTicket().getId(), false);
+        });
     }
 }
