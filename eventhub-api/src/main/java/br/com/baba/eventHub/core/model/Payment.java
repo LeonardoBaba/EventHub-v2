@@ -36,6 +36,9 @@ public class Payment {
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
 
+    @Column(name = "processed_date")
+    private LocalDateTime processedDate;
+
     public Payment(Ticket ticket, TicketFormDTO ticketFormDTO) {
         this.ticket = ticket;
         this.creationDate = LocalDateTime.now();

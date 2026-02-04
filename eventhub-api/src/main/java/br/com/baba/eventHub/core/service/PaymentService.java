@@ -58,7 +58,10 @@ public class PaymentService implements IMessageReceive<PaymentProcessedDTO> {
     @Transactional
     public void processMessage(PaymentProcessedDTO paymentProcessedDTO) {
         Optional<Payment> payment = repository.findById(paymentProcessedDTO.paymentID());
-        payment.ifPresent(p -> p.setStatus(paymentProcessedDTO.status()));
+        payment.ifPresent(p -> {
+            p.setStatus(paymentProcessedDTO.status());
+            p.setProcessedDate(paymentProcessedDTO.processedDate());
+        });
         ticketService.updateTicketStatus(paymentProcessedDTO.ticketID(), paymentProcessedDTO.status().equals(PaymentStatusEnum.SUCCESS));
     }
 }
