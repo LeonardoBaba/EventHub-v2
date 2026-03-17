@@ -34,8 +34,7 @@ public class PaymentProcessorService {
 
         try {
             System.out.println("Processing...");
-            int minutes = 60000;
-            Thread.sleep(new Random().nextInt(30 * minutes));
+            simulateProcessingDelay();
 
             boolean isSuccess = new Random().nextBoolean();
             String status = isSuccess ? "SUCCESS" : "FAILED";
@@ -63,5 +62,10 @@ public class PaymentProcessorService {
         } catch (Exception e) {
             System.err.println("Error processing payment: " + e.getMessage());
         }
+    }
+
+    protected void simulateProcessingDelay() throws InterruptedException {
+        int minutes = 60000;
+        Thread.sleep(new Random().nextInt(30 * minutes));
     }
 }
