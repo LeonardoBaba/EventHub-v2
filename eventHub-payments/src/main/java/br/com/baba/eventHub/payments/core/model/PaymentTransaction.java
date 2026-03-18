@@ -17,14 +17,16 @@ public class PaymentTransaction {
     private UUID paymentId;
     private String cardToken;
     private Integer installments;
+    private Integer price;
     private String status;
     private LocalDateTime processedAt;
 
-    public PaymentTransaction(UUID ticketId, UUID paymentId, String cardToken, Integer installments, String status) {
+    public PaymentTransaction(UUID ticketId, UUID paymentId, String cardToken, Integer installments, Integer price, String status) {
         this.ticketId = ticketId;
         this.paymentId = paymentId;
         this.cardToken = cardToken;
         this.installments = installments;
+        this.price = price;
         this.status = status;
         this.processedAt = LocalDateTime.now();
     }

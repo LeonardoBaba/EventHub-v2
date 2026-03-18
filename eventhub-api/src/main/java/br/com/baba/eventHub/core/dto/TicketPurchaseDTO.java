@@ -4,9 +4,9 @@ import br.com.baba.eventHub.core.model.Payment;
 
 import java.util.UUID;
 
-public record TicketPurchaseDTO(UUID ticketID, UUID paymentID, String cardToken, Integer installments) {
+public record TicketPurchaseDTO(UUID ticketID, UUID paymentID, String cardToken, Integer installments, Integer price) {
     public TicketPurchaseDTO(Payment payment) {
-        this(payment.getTicket().getId(), payment.getId(), payment.getCardToken(), payment.getInstallments());
+        this(payment.getTicket().getId(), payment.getId(), payment.getCardToken(), payment.getInstallments(), payment.getPrice());
     }
 }
 

@@ -44,6 +44,7 @@ public class PaymentProcessorService {
                     ticketPurchaseDTO.paymentID(),
                     ticketPurchaseDTO.cardToken(),
                     ticketPurchaseDTO.installments(),
+                    ticketPurchaseDTO.price(),
                     status
             );
             repository.save(transaction);
@@ -66,6 +67,6 @@ public class PaymentProcessorService {
 
     protected void simulateProcessingDelay() throws InterruptedException {
         int minutes = 60000;
-        Thread.sleep(new Random().nextInt(30 * minutes));
+        Thread.sleep(new Random().nextInt(minutes));
     }
 }

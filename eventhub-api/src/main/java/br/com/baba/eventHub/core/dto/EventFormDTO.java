@@ -19,5 +19,9 @@ public record EventFormDTO(
 
         @NotNull
         @Min(1)
-        Integer capacity) {
+        Integer capacity,
+
+        @NotNull
+        @Min(1)
+        Integer price) {
 }

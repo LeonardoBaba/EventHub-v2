@@ -64,6 +64,7 @@ class EventControllerTest {
         when(event.getDate()).thenReturn(LocalDateTime.now());
         when(event.getLocation()).thenReturn("Location");
         when(event.getCapacity()).thenReturn(100);
+        when(event.getPrice()).thenReturn(5000);
 
         when(authentication.getPrincipal()).thenReturn(user);
         when(eventService.createEvent(any(EventFormDTO.class), eq(user))).thenReturn(event);
@@ -84,6 +85,7 @@ class EventControllerTest {
         when(event.getDate()).thenReturn(LocalDateTime.now());
         when(event.getLocation()).thenReturn("Location");
         when(event.getCapacity()).thenReturn(100);
+        when(event.getPrice()).thenReturn(5000);
 
         Page<Event> eventsPage = new PageImpl<>(Collections.singletonList(event));
         when(eventService.getAllActiveEvents(any(Pageable.class), any(), any())).thenReturn(eventsPage);

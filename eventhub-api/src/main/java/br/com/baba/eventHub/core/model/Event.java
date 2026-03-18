@@ -35,6 +35,9 @@ public class Event {
     @Column(nullable = false)
     private Integer capacity;
 
+    @Column(nullable = false)
+    private Integer price;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private EventStatusEnum statusEnum;
@@ -49,6 +52,7 @@ public class Event {
         this.date = eventFormDTO.date();
         this.location = eventFormDTO.location();
         this.capacity = eventFormDTO.capacity();
+        this.price = eventFormDTO.price();
         this.statusEnum = EventStatusEnum.ACTIVE;
         this.organizer = organizer;
     }

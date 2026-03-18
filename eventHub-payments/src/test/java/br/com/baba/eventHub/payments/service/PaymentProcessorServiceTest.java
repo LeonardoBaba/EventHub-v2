@@ -48,7 +48,8 @@ class PaymentProcessorServiceTest {
                 ticketId,
                 paymentId,
                 "token-789",
-                1
+                1,
+                5000
         );
 
         doNothing().when(paymentProcessorService).simulateProcessingDelay();
@@ -65,6 +66,7 @@ class PaymentProcessorServiceTest {
         assertEquals(paymentId, savedTransaction.getPaymentId());
         assertEquals("token-789", savedTransaction.getCardToken());
         assertEquals(1, savedTransaction.getInstallments());
+        assertEquals(5000, savedTransaction.getPrice());
         assertTrue("SUCCESS".equals(savedTransaction.getStatus()) || "FAILED".equals(savedTransaction.getStatus()));
 
         ArgumentCaptor<PaymentProcessedDTO> rabbitCaptor = ArgumentCaptor.forClass(PaymentProcessedDTO.class);
@@ -83,7 +85,8 @@ class PaymentProcessorServiceTest {
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 "token-error",
-                1
+                1,
+                5000
         );
 
         doThrow(new InterruptedException("Simulated delay error")).when(paymentProcessorService).simulateProcessingDelay();

@@ -33,6 +33,9 @@ public class Payment {
 
     private Integer installments;
 
+    @Column(name = "price", nullable = false)
+    private Integer price;
+
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
 
@@ -45,5 +48,6 @@ public class Payment {
         this.status = PaymentStatusEnum.PENDING;
         this.cardToken = ticketFormDTO.cardToken();
         this.installments = ticketFormDTO.installments();
+        this.price = ticket.getEvent().getPrice();
     }
 }

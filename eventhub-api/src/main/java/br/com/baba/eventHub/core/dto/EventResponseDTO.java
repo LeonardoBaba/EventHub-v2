@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record EventResponseDTO(UUID id, String title, String description, LocalDateTime date, String location,
-                               Integer capacity,
+                               Integer capacity, Integer price,
                                EventStatusEnum status) {
     public EventResponseDTO(Event event) {
-        this(event.getId(), event.getTitle(), event.getDescription(), event.getDate(), event.getLocation(), event.getCapacity(), event.getStatusEnum());
+        this(event.getId(), event.getTitle(), event.getDescription(), event.getDate(), event.getLocation(), event.getCapacity(), event.getPrice(), event.getStatusEnum());
     }
 }
