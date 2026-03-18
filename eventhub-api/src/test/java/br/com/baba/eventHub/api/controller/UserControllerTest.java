@@ -42,7 +42,7 @@ class UserControllerTest {
     void shouldReturnOkWhenCreatingUser() throws UserException {
         when(userService.createUser(any(UserFormDTO.class))).thenReturn(user);
 
-        ResponseEntity response = userController.createUser(userFormDTO);
+        ResponseEntity<Void> response = userController.createUser(userFormDTO);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(userService).createUser(any(UserFormDTO.class));
@@ -54,7 +54,7 @@ class UserControllerTest {
         String cpf = "12345678901";
         when(userService.getUserByCPF(cpf)).thenReturn(userResponseDTO);
 
-        ResponseEntity response = userController.getUser(cpf);
+        ResponseEntity<UserResponseDTO> response = userController.getUser(cpf);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(userResponseDTO, response.getBody());

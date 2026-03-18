@@ -1,6 +1,7 @@
 package br.com.baba.eventHub.api.controller;
 
 import br.com.baba.eventHub.core.dto.UserFormDTO;
+import br.com.baba.eventHub.core.dto.UserResponseDTO;
 import br.com.baba.eventHub.core.exceptions.UserException;
 import br.com.baba.eventHub.core.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,7 +19,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity createUser(@Valid @RequestBody UserFormDTO userFormDTO) throws UserException {
+    public ResponseEntity<Void> createUser(@Valid @RequestBody UserFormDTO userFormDTO) throws UserException {
         userService.createUser(userFormDTO);
         return ResponseEntity.ok().build();
     }
@@ -26,8 +27,8 @@ public class UserController {
     @GetMapping("/{cpf}")
     @SecurityRequirement(name = "bearer-key")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
-    public ResponseEntity getUser(@PathVariable String cpf) throws UserException {
-        var userDTO = userService.getUserByCPF(cpf);
+    public ResponseEntity<UserResponseDTO> getUser(@PathVariable String cpf) throws UserException {
+        UserResponseDTO userDTO = userService.getUserByCPF(cpf);
         return ResponseEntity.ok(userDTO);
     }
 }

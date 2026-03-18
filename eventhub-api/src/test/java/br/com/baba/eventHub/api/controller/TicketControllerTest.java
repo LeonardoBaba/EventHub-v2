@@ -41,7 +41,7 @@ class TicketControllerTest {
         TicketFormDTO ticketFormDTO = new TicketFormDTO("123", 1);
         when(authentication.getPrincipal()).thenReturn(user);
 
-        ResponseEntity response = ticketController.purchaseTicket(eventId, ticketFormDTO, authentication);
+        ResponseEntity<Void> response = ticketController.purchaseTicket(eventId, ticketFormDTO, authentication);
 
         assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
         verify(ticketService).purchaseTicket(eventId, user, ticketFormDTO);

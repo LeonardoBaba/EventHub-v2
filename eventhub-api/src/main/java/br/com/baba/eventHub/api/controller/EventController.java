@@ -31,7 +31,7 @@ public class EventController {
     @PostMapping
     @SecurityRequirement(name = "bearer-key")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ORGANIZER')")
-    public ResponseEntity createEvent(@Valid @RequestBody EventFormDTO eventFormDTO, Authentication authentication) {
+    public ResponseEntity<EventResponseDTO> createEvent(@Valid @RequestBody EventFormDTO eventFormDTO, Authentication authentication) {
         User orgazinUser = (User) authentication.getPrincipal();
         Event event = eventService.createEvent(eventFormDTO, orgazinUser);
         return ResponseEntity.ok(new EventResponseDTO(event));
@@ -50,7 +50,7 @@ public class EventController {
     @PatchMapping("/{id}")
     @SecurityRequirement(name = "bearer-key")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ORGANIZER')")
-    public ResponseEntity cancelEvent(@PathVariable UUID id) throws EventException {
+    public ResponseEntity<Void> cancelEvent(@PathVariable UUID id) throws EventException {
         eventService.cancelEvent(id);
         return ResponseEntity.ok().build();
     }

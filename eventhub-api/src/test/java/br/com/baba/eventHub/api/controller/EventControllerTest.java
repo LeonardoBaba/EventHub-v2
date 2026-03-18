@@ -69,7 +69,7 @@ class EventControllerTest {
         when(authentication.getPrincipal()).thenReturn(user);
         when(eventService.createEvent(any(EventFormDTO.class), eq(user))).thenReturn(event);
 
-        ResponseEntity response = eventController.createEvent(eventFormDTO, authentication);
+        ResponseEntity<EventResponseDTO> response = eventController.createEvent(eventFormDTO, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertNotNull(response.getBody());
@@ -102,7 +102,7 @@ class EventControllerTest {
     void shouldReturnOkWhenCancellingEvent() throws Exception {
         UUID eventId = UUID.randomUUID();
 
-        ResponseEntity response = eventController.cancelEvent(eventId);
+        ResponseEntity<Void> response = eventController.cancelEvent(eventId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(eventService).cancelEvent(eventId);
