@@ -101,5 +101,13 @@ public class EventService {
             }
         }
     }
+    @Scheduled(fixedRate = 60000 * 60)
+    @Transactional
+    public void markExpiredEventsAsFinished() {
+        int updatedCount = eventRepository.finishExpiredEvents(EventStatusEnum.ACTIVE, EventStatusEnum.FINISHED);
+        if (updatedCount > 0) {
+            System.out.println("Scheduler: Marked " + updatedCount + " expired events as FINISHED.");
+        }
+    }
 
 }
