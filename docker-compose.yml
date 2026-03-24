@@ -9,16 +9,12 @@ services:
     container_name: eventhub-api-v2
     ports:
       - "${API_PORT}:${API_PORT}"
+    env_file:
+      - .env
     environment:
-      - API_SERVER_PORT=${API_PORT}
       - DB_URL=jdbc:postgresql://db:5432/eventhubdb
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -35,18 +31,11 @@ services:
     container_name: eventhub-payments-v2
     ports:
       - "${PAYMENTS_PORT}:${PAYMENTS_PORT}"
+    env_file:
+      - .env
     environment:
-      - PAYMENTS_SERVER_PORT=${PAYMENTS_PORT}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - MONGODB_URI=${MONGODB_URI}
-      - MQ_EXCHANGE_NAME=${MQ_EXCHANGE_NAME}
-      - MQ_QUEUE_INPUT=${MQ_QUEUE_INPUT}
-      - MQ_QUEUE_OUTPUT=${MQ_QUEUE_OUTPUT}
-      - MQ_ROUTING_KEY_INPUT=${MQ_ROUTING_KEY_INPUT}
-      - MQ_ROUTING_KEY_OUTPUT=${MQ_ROUTING_KEY_OUTPUT}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -58,6 +47,8 @@ services:
   db:
     image: postgres:16-alpine
     container_name: eventhub-db-v2
+    env_file:
+      - .env
     environment:
       - POSTGRES_DB=eventhubdb
       - POSTGRES_USER=${DB_USERNAME}
@@ -94,6 +85,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    env_file:
+      - .env
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}

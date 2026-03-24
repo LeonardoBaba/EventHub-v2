@@ -65,20 +65,10 @@ jobs:
             mkdir -p /root/eventhub-v2
             cd /root/eventhub-v2
             
-            # Create .env file with all secrets
-            echo "API_PORT=${{ secrets.API_PORT }}" > .env
-            echo "PAYMENTS_PORT=${{ secrets.PAYMENTS_PORT }}" >> .env
-            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-            echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
-            echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> .env
-            echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
-            echo "MQ_EXCHANGE_NAME=${{ secrets.MQ_EXCHANGE_NAME }}" >> .env
-            echo "MQ_QUEUE_INPUT=${{ secrets.MQ_QUEUE_INPUT }}" >> .env
-            echo "MQ_QUEUE_OUTPUT=${{ secrets.MQ_QUEUE_OUTPUT }}" >> .env
-            echo "MQ_ROUTING_KEY_INPUT=${{ secrets.MQ_ROUTING_KEY_INPUT }}" >> .env
-            echo "MQ_ROUTING_KEY_OUTPUT=${{ secrets.MQ_ROUTING_KEY_OUTPUT }}" >> .env
+            # Create .env file dynamically from a single GitHub Secret
+            cat << 'EOF' > .env
+            ${{ secrets.ENV_PRODUCTION }}
+            EOF
             
             docker compose pull
             docker compose up -d --remove-orphans --no-build
