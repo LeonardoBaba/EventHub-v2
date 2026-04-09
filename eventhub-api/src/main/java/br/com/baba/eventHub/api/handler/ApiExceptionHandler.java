@@ -3,6 +3,7 @@ package br.com.baba.eventHub.api.handler;
 import br.com.baba.eventHub.core.dto.ErrorMessageDTO;
 import br.com.baba.eventHub.core.dto.FieldErrorDTO;
 import br.com.baba.eventHub.core.exceptions.EventException;
+import br.com.baba.eventHub.core.exceptions.IdempotencyConflictException;
 import br.com.baba.eventHub.core.exceptions.UserAlreadyExistsException;
 import br.com.baba.eventHub.core.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -61,6 +62,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity handleUserAlreadyExistsException(UserAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorMessageDTO(HttpStatus.CONFLICT.value(), e.getMessage()));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageDTO> handleIdempotencyConflictException(IdempotencyConflictException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorMessageDTO(HttpStatus.CONFLICT.value(), e.getMessage()));
     }
 
