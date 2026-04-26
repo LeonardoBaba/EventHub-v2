@@ -32,7 +32,8 @@ public class PaymentProcessorService {
 
     @RabbitListener(queues = "${mq.queue.input}")
     public void processPayment(TicketPurchaseDTO dto) {
-        System.out.println("Receiving payment request ID: " + dto.paymentID());
+        log.info("Receiving payment request paymentID={} ticketID={}",
+                dto.paymentID(), dto.ticketID());
         try {
             simulateProcessingDelay();
         } catch (InterruptedException e) {

@@ -1,16 +1,14 @@
 package br.com.baba.eventHub.core.service;
 
 import br.com.baba.eventHub.core.interfaces.IEmail;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class EmailNotificationService implements IEmail {
     public void send(String recipient, String subject, String message) {
-        System.out.println("--------------------------------------------------");
-        System.out.println("📧 SIMULATING EMAIL SENDING");
-        System.out.println("To: " + recipient);
-        System.out.println("Subject: " + subject);
-        System.out.println("Message: " + message);
-        System.out.println("--------------------------------------------------");
+        log.info("📧 SIMULATING EMAIL SENDING — to={} subject=\"{}\" message=\"{}\"",
+                recipient, subject, message);
     }
 }

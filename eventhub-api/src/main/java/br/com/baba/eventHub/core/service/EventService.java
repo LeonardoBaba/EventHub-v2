@@ -8,6 +8,7 @@ import br.com.baba.eventHub.core.model.Event;
 import br.com.baba.eventHub.core.model.User;
 import br.com.baba.eventHub.core.repository.EventRepository;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class EventService {
 
@@ -106,7 +108,7 @@ public class EventService {
     public void markExpiredEventsAsFinished() {
         int updatedCount = eventRepository.finishExpiredEvents(EventStatusEnum.ACTIVE, EventStatusEnum.FINISHED);
         if (updatedCount > 0) {
-            System.out.println("Scheduler: Marked " + updatedCount + " expired events as FINISHED.");
+            log.info("Scheduler: Marked {} expired events as FINISHED.", updatedCount);
         }
     }
 

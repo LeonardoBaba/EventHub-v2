@@ -2,6 +2,7 @@ package br.com.baba.eventHub.core.configuration;
 
 import br.com.baba.eventHub.core.interfaces.IMessageReceive;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class RabbitReceiver implements MessageListener {
 
@@ -36,14 +38,14 @@ public class RabbitReceiver implements MessageListener {
             IMessageReceive<?> strategy = strategies.get(originQueue);
 
             if (strategy == null) {
-                System.err.println("Service not found for queue: " + originQueue);
+                log.warn("Service not found for queue: {}", originQueue);
                 return;
             }
 
             processMessage(strategy, jsonBody);
 
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.error("Error processing message from queue", e);
         }
     }
 
