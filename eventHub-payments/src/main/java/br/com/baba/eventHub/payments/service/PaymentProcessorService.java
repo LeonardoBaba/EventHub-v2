@@ -4,6 +4,7 @@ import br.com.baba.eventHub.payments.core.dto.PaymentProcessedDTO;
 import br.com.baba.eventHub.payments.core.dto.TicketPurchaseDTO;
 import br.com.baba.eventHub.payments.core.model.PaymentTransaction;
 import br.com.baba.eventHub.payments.core.repository.PaymentTransactionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
+@Slf4j
 public class PaymentProcessorService {
 
     @Autowired
@@ -29,44 +31,43 @@ public class PaymentProcessorService {
     private String outputRoutingKey;
 
     @RabbitListener(queues = "${mq.queue.input}")
-    public void processPayment(TicketPurchaseDTO ticketPurchaseDTO) {
-        System.out.println("Receiving payment request ID: " + ticketPurchaseDTO.paymentID());
-
+    public void processPayment(TicketPurchaseDTO dto) {
+        System.out.println("Receiving payment request ID: " + dto.paymentID());
         try {
-            System.out.println("Processing...");
             simulateProcessingDelay();
-
-            boolean isSuccess = new Random().nextBoolean();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Payment processing interrupted paymentID={}", dto.paymentID());
+            return;
+        }
+        try {
+            boolean isSuccess = ThreadLocalRandom.current().nextBoolean();
             String status = isSuccess ? "SUCCESS" : "FAILED";
 
             PaymentTransaction transaction = new PaymentTransaction(
-                    ticketPurchaseDTO.ticketID(),
-                    ticketPurchaseDTO.paymentID(),
-                    ticketPurchaseDTO.cardToken(),
-                    ticketPurchaseDTO.installments(),
-                    ticketPurchaseDTO.price(),
-                    status
+                    dto.ticketID(), dto.paymentID(), dto.cardToken(),
+                    dto.installments(), dto.price(), status
             );
             repository.save(transaction);
-            System.out.println("Transaction saved: " + transaction.getId());
+            log.info("Transaction saved id={} paymentID={} status={}",
+                    transaction.getId(), dto.paymentID(), status);
 
             PaymentProcessedDTO response = new PaymentProcessedDTO(
-                    ticketPurchaseDTO.ticketID(),
-                    ticketPurchaseDTO.paymentID(),
-                    status,
-                    LocalDateTime.now()
+                    dto.ticketID(), dto.paymentID(), status, LocalDateTime.now()
             );
 
             rabbitTemplate.convertAndSend(exchangeName, outputRoutingKey, response);
-            System.out.println("Response sent to queue: " + outputRoutingKey + " | Status: " + status);
+            log.info("Response sent routingKey={} paymentID={} status={}",
+                    outputRoutingKey, dto.paymentID(), status);
 
         } catch (Exception e) {
-            System.err.println("Error processing payment: " + e.getMessage());
+            log.error("Failed to process payment paymentID={} ticketID={}",
+                    dto.paymentID(), dto.ticketID(), e);
         }
     }
 
     protected void simulateProcessingDelay() throws InterruptedException {
-        int minutes = 60000;
-        Thread.sleep(new Random().nextInt(minutes));
+        int minute = 60000;
+        Thread.sleep(ThreadLocalRandom.current().nextInt(5 * minute));
     }
 }
