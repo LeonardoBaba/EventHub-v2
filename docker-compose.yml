@@ -64,18 +64,18 @@ services:
       - eventhub-net
 
   mongodb:
-    image: mongo:latest
-    container_name: eventhub-mongodb-v2
-    ports:
-      - "27017:27017"
+    image: mongo:7
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=eventhub-payments
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh -u $$MONGO_INITDB_ROOT_USERNAME -p $$MONGO_INITDB_ROOT_PASSWORD --quiet
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 40s
     networks:
       - eventhub-net
 
