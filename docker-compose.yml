@@ -83,7 +83,6 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: eventhub-rabbitmq-v2
     ports:
-      - "5672:5672"
       - "15672:15672"
     env_file:
       - .env
