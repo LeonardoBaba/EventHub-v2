@@ -1,8 +1,0 @@
-{
-    email {$CADDY_EMAIL}
-}
-
-{$DOMAIN} {
-    encode gzip
-    reverse_proxy eventhub-api:{$API_PORT}
-}

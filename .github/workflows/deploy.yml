@@ -51,7 +51,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml,Caddyfile"
+          source: "docker-compose.yml"
           target: "/root/eventhub-v2"
           overwrite: true
 
@@ -68,9 +68,7 @@ jobs:
             # Create .env file dynamically from a single GitHub Secret
             cat << 'EOF' > .env
             ${{ secrets.ENV_PRODUCTION }}
-            DOMAIN=${{ secrets.DOMAIN }}
-            CADDY_EMAIL=${{ secrets.CADDY_EMAIL }}
             EOF
-
+            
             docker compose pull
             docker compose up -d --remove-orphans --no-build
