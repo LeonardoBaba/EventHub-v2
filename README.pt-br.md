@@ -1,72 +1,122 @@
-# EventHub V2 - Evolução para Microsserviços
+# EventHub v2
 
-Este projeto representa a evolução do desafio técnico original do EventHub. Enquanto a primeira versão focava nas regras
-de negócio principais em uma estrutura única, a V2 introduz conceitos de arquitetura distribuída, separação de
-responsabilidades e mensageria assíncrona.
+O **EventHub** é um projeto para gerenciamento de eventos e venda de ingressos. O projeto nasceu como a resolução de
+um [desafio técnico](eventhub-api/TECHNICAL_CASE.md).
 
-## O que mudou na Versão 2?
+A aplicação que originalmente era um monólito foi separada em microsserviços. A responsabilidade de transações
+financeiras foi extraída para um *worker* de pagamentos independente, introduzindo comunicação assíncrona entre os
+serviços utilizando **RabbitMQ** (nota: o processamento do pagamento na operadora é *mockado* para fins de
+demonstração).
 
-Diferente da primeira etapa (detalhada em [eventhub-api/TECHNICAL_CASE.md](eventhub-api/TECHNICAL_CASE.md)), esta versão
-divide o sistema em dois serviços independentes:
+🚀 **Live Demo:** O projeto possui deploy automatizado (CI/CD) em uma VPS e online. Documentação dos endpoints:
+https://eventhub.lbaba.com.br/swagger-ui/index.html
 
-1. **EventHub API**: Responsável pela gestão de usuários, eventos e criação de pedidos de tickets. Atua como o produtor
-   de mensagens.
-2. **EventHub Payments**: Um microsserviço dedicado exclusivamente ao processamento de pagamentos. Ele consome pedidos
-   da fila, processa a transação e devolve o status final.
+## Principais Funcionalidades
 
-## Tecnologias Utilizadas
+- **Autenticação e Autorização:** Registro e Login de usuários com segurança baseada em tokens JWT.
+- **Gestão de Eventos:** CRUD completo para criação, listagem e gerenciamento de eventos.
+- **Reserva de Ingressos:** Sistema de compra de ingressos vinculados aos usuários e eventos.
+- **Processamento Assíncrono:** Fila de processamento de pagamentos utilizando RabbitMQ.
+- **Idempotência:** Proteção contra duplicidade de requisições.
 
-- **Java 21** e **Spring Boot 3**
-- **RabbitMQ**: Broker de mensagens.
-- **PostgreSQL**: Banco de dados principal.
-- **MongoDB**: Banco de dados de transações.
-- **Flyway**: Migrações de banco de dados.
-- **Spring Security + JWT**: Autenticação e autorização.
-- **Docker & Docker Compose**: Orquestração de containers.
+## Tecnologias
 
-## Estrutura do Repositório
+- Java 21
+- Spring Boot 3.4 (Data JPA, Security, AMQP)
+- PostgreSQL
+- Flyway
+- RabbitMQ
+- Docker & Docker Compose
+- GitHub Actions
 
-- `/eventhub-api`: O núcleo do sistema, contendo as regras de negócio de eventos e segurança.
-- `/eventHub-payments`: O worker de pagamentos que processa as filas do RabbitMQ.
+## Estrutura do Projeto
 
-## Como Executar o Projeto
+O projeto adota uma arquitetura baseada em microsserviços/módulos, dividida entre a API principal e o
+serviço de processamento de pagamentos, comunicando-se de forma assíncrona.
 
-Para rodar todo o ecossistema, você precisará apenas do Docker instalado.
+```
+EventHub-v2/
+├── .github/workflows/     # CI/CD (Configurações do GitHub Actions)
+├── docker-compose.yml     # Orquestração dos containers (APIs, Mensageria, Bancos de Dados)
+├── pom.xml                # Configuração raiz do projeto Maven
+│
+├── eventhub-api/          # Serviço Principal (REST API)
+│   ├── Dockerfile
+│   └── src/
+│       ├── main/java/br/com/baba/eventHub/
+│       │   ├── api/       # Entrypoints REST: Controllers, Handlers e Configurações (CORS)
+│       │   └── core/      # Domínio: Models, Repositories, Services, Security (JWT) e DTOs
+│       └── main/resources/
+│           └── db/migration/ # Scripts de migração de banco de dados (Flyway)
+│
+└── eventHub-payments/     # Serviço worker para processamento de pagamentos
+    ├── Dockerfile
+    └── src/
+        └── main/java/br/com/baba/eventHub/payments/
+            ├── config/    # Configurações de mensageria (RabbitMQ)
+            ├── core/      # Domínio específico de pagamentos: Models, DTOs e Repositories
+            └── service/   # Regras de negócio e processamento de filas
+```
 
-1. **Configuração de Variáveis**:
-   Crie um arquivo `.env` na raiz do projeto com as seguintes chaves (conforme os segredos definidos no workflow de
-   deploy):
-   ```env
-   API_PORT=15000
-   PAYMENTS_PORT=15001
-   DB_USERNAME=seu_usuario
-   DB_PASSWORD=sua_senha
-   JWT_SECRET=seu_segredo_jwt
-   RABBITMQ_USER=guest
-   RABBITMQ_PASSWORD=guest
-   MONGODB_URI=mongodb://mongodb:27017/payments
-   MQ_EXCHANGE_NAME=eventhub.exchange
-   MQ_QUEUE_INPUT=eventhub.payment.created
-   MQ_QUEUE_OUTPUT=eventhub.payment.processed
-   MQ_ROUTING_KEY_INPUT=payment.created
-   MQ_ROUTING_KEY_OUTPUT=payment.processed
-   ```
+## Como Executar
 
-2. **Subir os Containers**:
-   Na raiz do projeto, execute o comando:
-   ```bash
-   docker-compose up -d --build
-   ```
+Para rodar a aplicação localmente, basta clonar o repositório e configurar as variáveis de ambiente necessárias.
 
-3. **Acessar a Documentação**:
-    - API Swagger: `http://localhost:15000/swagger-ui/index.html`
+### Pré-requisitos
 
-## Fluxo de Pagamento
+- Docker instalado
+- (Opcional) Java 21 e Maven instalados, caso queira rodar a aplicação fora dos containers.
 
-1. O usuário solicita a compra de um ticket na `eventhub-api`.
-2. A API cria um registro de ticket com status `PENDING` e envia uma mensagem para a fila `payment.created`.
-3. O `eventHub-payments` recebe a mensagem, simula o processamento e salva o resultado no MongoDB.
-4. O serviço de pagamentos envia uma mensagem de volta para a fila `payment.processed`.
-5. A API consome essa resposta e atualiza o status final do ticket (sucesso ou falha).
+### Clonar o Repositório
 
----
+```
+git clone https://github.com/LeonardoBaba/eventhub-v2.git
+cd eventhub-v2
+```
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto e preencha com as variáveis abaixo:
+
+| **Variável**            | **Exemplo**                                                            |
+|-------------------------|------------------------------------------------------------------------|
+| `API_PORT`              | `15000`                                                                |
+| `PAYMENTS_PORT`         | `15001`                                                                |
+| `DB_USERNAME`           | `postgres`                                                             |
+| `DB_PASSWORD`           | `postgres`                                                             |
+| `JWT_SECRET`            | `seu_segredo_jwt_super_seguro`                                         |
+| `RABBITMQ_USER`         | `guest`                                                                |
+| `RABBITMQ_PASSWORD`     | `guest`                                                                |
+| `MONGO_ROOT_USER`       | `root`                                                                 |
+| `MONGO_ROOT_PASSWORD`   | `root`                                                                 |
+| `MONGODB_URI`           | `mongodb://root:root@mongodb:27017/eventhub-payments?authSource=admin` |
+| `MQ_EXCHANGE_NAME`      | `eventhub.exchange`                                                    |
+| `MQ_QUEUE_INPUT`        | `eventhub.payment.created`                                             |
+| `MQ_QUEUE_OUTPUT`       | `eventhub.payment.processed`                                           |
+| `MQ_ROUTING_KEY_INPUT`  | `payment.created`                                                      |
+| `MQ_ROUTING_KEY_OUTPUT` | `payment.processed`                                                    |
+
+*(Nota: As variáveis de MQ (filas e roteamento) já possuem valores padrão no código, mas podem ser sobrescritas
+no `.env`)*
+
+### Executar
+
+Com o arquivo `.env` configurado, inicie os containers utilizando o Docker Compose:
+
+```
+docker compose up -d --build
+```
+
+Isso fará o build das imagens da API e do serviço de Pagamentos, e subirá todos os serviços adjacentes (PostgreSQL,
+MongoDB e RabbitMQ).
+
+Você poderá acessar a documentação da API via Swagger localmente em: `http://localhost:15000/swagger-ui/index.html`
+
+## Deploy
+
+O processo de deploy é totalmente automatizado via CI/CD. Qualquer *push* realizado na branch `master` aciona a pipeline
+do `.github/workflows/deploy.yml`, que executa o seguinte fluxo:
+
+1. Build da aplicação.
+2. Geração e envio das imagens Docker (API e Payments) para o Docker Hub.
+3. Deploy na VPS via conexão SSH.
