@@ -1,5 +1,6 @@
 package br.com.baba.eventHub.payments.core.model;
 
+import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -21,10 +22,10 @@ public class PaymentTransaction {
     private String cardToken;
     private Integer installments;
     private Integer price;
-    private String status;
+    private PaymentStatusEnum status;
     private LocalDateTime processedAt;
 
-    public PaymentTransaction(UUID ticketId, UUID paymentId, String cardToken, Integer installments, Integer price, String status) {
+    public PaymentTransaction(UUID ticketId, UUID paymentId, String cardToken, Integer installments, Integer price, PaymentStatusEnum status) {
         this.ticketId = ticketId;
         this.paymentId = paymentId;
         this.cardToken = cardToken;

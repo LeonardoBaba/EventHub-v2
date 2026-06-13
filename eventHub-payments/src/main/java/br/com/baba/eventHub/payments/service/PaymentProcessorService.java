@@ -2,6 +2,7 @@ package br.com.baba.eventHub.payments.service;
 
 import br.com.baba.eventHub.payments.core.dto.PaymentProcessedDTO;
 import br.com.baba.eventHub.payments.core.dto.TicketPurchaseDTO;
+import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
 import br.com.baba.eventHub.payments.core.model.PaymentTransaction;
 import br.com.baba.eventHub.payments.core.repository.PaymentTransactionRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class PaymentProcessorService {
                 return;
             }
 
-            String status = ThreadLocalRandom.current().nextBoolean() ? "SUCCESS" : "FAILED";
+            PaymentStatusEnum status = ThreadLocalRandom.current().nextBoolean() ? PaymentStatusEnum.SUCCESS : PaymentStatusEnum.FAILED;
             transaction = new PaymentTransaction(
                     dto.ticketID(), dto.paymentID(), dto.cardToken(),
                     dto.installments(), dto.price(), status

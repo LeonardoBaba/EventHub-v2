@@ -2,6 +2,7 @@ package br.com.baba.eventHub.payments.service;
 
 import br.com.baba.eventHub.payments.core.dto.PaymentProcessedDTO;
 import br.com.baba.eventHub.payments.core.dto.TicketPurchaseDTO;
+import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
 import br.com.baba.eventHub.payments.core.model.PaymentTransaction;
 import br.com.baba.eventHub.payments.core.repository.PaymentTransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +68,7 @@ class PaymentProcessorServiceTest {
         assertEquals("token-789", savedTransaction.getCardToken());
         assertEquals(1, savedTransaction.getInstallments());
         assertEquals(5000, savedTransaction.getPrice());
-        assertTrue("SUCCESS".equals(savedTransaction.getStatus()) || "FAILED".equals(savedTransaction.getStatus()));
+        assertTrue(savedTransaction.getStatus() == PaymentStatusEnum.SUCCESS || savedTransaction.getStatus() == PaymentStatusEnum.FAILED);
 
         ArgumentCaptor<PaymentProcessedDTO> rabbitCaptor = ArgumentCaptor.forClass(PaymentProcessedDTO.class);
         verify(rabbitTemplate, times(1)).convertAndSend(eq("testExchange"), eq("testRoutingKey"), rabbitCaptor.capture());
