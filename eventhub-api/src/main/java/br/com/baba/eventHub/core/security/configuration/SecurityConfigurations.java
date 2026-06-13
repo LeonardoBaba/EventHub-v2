@@ -14,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +29,16 @@ public class SecurityConfigurations {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return
                 http.csrf(csrf -> csrf.disable())
+                        .headers(headers -> headers
+                                .httpStrictTransportSecurity(hsts -> hsts
+                                        .requestMatcher(AnyRequestMatcher.INSTANCE)
+                                        .includeSubDomains(true)
+                                        .maxAgeInSeconds(31536000))
+                                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                                                + "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+                                                + "frame-ancestors 'none'"))
+                                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.NO_REFERRER)))
                         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                         .authorizeHttpRequests(req -> {
                             req.requestMatchers(HttpMethod.POST, "/login").permitAll();
