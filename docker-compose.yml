@@ -7,8 +7,6 @@ services:
       dockerfile: eventhub-api/Dockerfile
     image: eventhub-api-v2:latest
     container_name: eventhub-api-v2
-    ports:
-      - "${API_PORT}:${API_PORT}"
     env_file:
       - .env
     environment:
@@ -30,8 +28,6 @@ services:
       dockerfile: eventHub-payments/Dockerfile
     image: eventhub-payments-v2:latest
     container_name: eventhub-payments-v2
-    ports:
-      - "${PAYMENTS_PORT}:${PAYMENTS_PORT}"
     env_file:
       - .env
     environment:
