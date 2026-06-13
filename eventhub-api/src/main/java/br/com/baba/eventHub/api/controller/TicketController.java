@@ -7,6 +7,7 @@ import br.com.baba.eventHub.core.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,7 @@ public class TicketController {
     private TicketService ticketService;
 
     @PostMapping("/api/events/{eventId}/tickets")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> purchaseTicket(@PathVariable("eventId") UUID eventId, @Valid @RequestBody TicketFormDTO ticketFormDTO, Authentication authentication) throws EventException {
         User user = (User) authentication.getPrincipal();
         ticketService.purchaseTicket(eventId, user, ticketFormDTO);
