@@ -2,6 +2,7 @@ package br.com.baba.eventHub.payments.core.model;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,8 @@ public class PaymentTransaction {
     @Id
     private String id;
     private UUID ticketId;
+
+    @Indexed(unique = true)
     private UUID paymentId;
     private String cardToken;
     private Integer installments;

@@ -9,9 +9,10 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -34,37 +35,47 @@ public class PaymentProcessorService {
     public void processPayment(TicketPurchaseDTO dto) {
         log.info("Receiving payment request paymentID={} ticketID={}",
                 dto.paymentID(), dto.ticketID());
-        try {
-            simulateProcessingDelay();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Payment processing interrupted paymentID={}", dto.paymentID());
-            return;
-        }
-        try {
-            boolean isSuccess = ThreadLocalRandom.current().nextBoolean();
-            String status = isSuccess ? "SUCCESS" : "FAILED";
 
-            PaymentTransaction transaction = new PaymentTransaction(
+        Optional<PaymentTransaction> existing = repository.findByPaymentId(dto.paymentID());
+        PaymentTransaction transaction;
+
+        if (existing.isPresent()) {
+            transaction = existing.get();
+            log.info("Replay detected paymentID={} - reusing transaction id={} status={}",
+                    dto.paymentID(), transaction.getId(), transaction.getStatus());
+        } else {
+            try {
+                simulateProcessingDelay();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Payment processing interrupted paymentID={}", dto.paymentID());
+                return;
+            }
+
+            String status = ThreadLocalRandom.current().nextBoolean() ? "SUCCESS" : "FAILED";
+            transaction = new PaymentTransaction(
                     dto.ticketID(), dto.paymentID(), dto.cardToken(),
                     dto.installments(), dto.price(), status
             );
-            repository.save(transaction);
-            log.info("Transaction saved id={} paymentID={} status={}",
-                    transaction.getId(), dto.paymentID(), status);
 
-            PaymentProcessedDTO response = new PaymentProcessedDTO(
-                    dto.ticketID(), dto.paymentID(), status, LocalDateTime.now()
-            );
-
-            rabbitTemplate.convertAndSend(exchangeName, outputRoutingKey, response);
-            log.info("Response sent routingKey={} paymentID={} status={}",
-                    outputRoutingKey, dto.paymentID(), status);
-
-        } catch (Exception e) {
-            log.error("Failed to process payment paymentID={} ticketID={}",
-                    dto.paymentID(), dto.ticketID(), e);
+            try {
+                repository.save(transaction);
+                log.info("Transaction saved id={} paymentID={} status={}",
+                        transaction.getId(), dto.paymentID(), status);
+            } catch (DuplicateKeyException e) {
+                transaction = repository.findByPaymentId(dto.paymentID()).orElseThrow();
+                log.info("Concurrent duplicate paymentID={} - using existing transaction id={} status={}",
+                        dto.paymentID(), transaction.getId(), transaction.getStatus());
+            }
         }
+
+        PaymentProcessedDTO response = new PaymentProcessedDTO(
+                dto.ticketID(), dto.paymentID(), transaction.getStatus(), transaction.getProcessedAt()
+        );
+
+        rabbitTemplate.convertAndSend(exchangeName, outputRoutingKey, response);
+        log.info("Response sent routingKey={} paymentID={} status={}",
+                outputRoutingKey, dto.paymentID(), transaction.getStatus());
     }
 
     protected void simulateProcessingDelay() throws InterruptedException {
