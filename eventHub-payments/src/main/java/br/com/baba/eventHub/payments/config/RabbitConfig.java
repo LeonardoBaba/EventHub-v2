@@ -6,9 +6,12 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +30,9 @@ public class RabbitConfig {
 
     @Value("${mq.routing.key.input}")
     private String inputRoutingKey;
+
+    @Value("${mq.dlx.name}")
+    private String dlxName;
 
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
@@ -48,13 +54,31 @@ public class RabbitConfig {
     }
 
     @Bean
+    public DirectExchange deadLetterExchange() {
+        return new DirectExchange(dlxName);
+    }
+
+    @Bean
     public Queue inputQueue() {
-        return new Queue(inputQueueName, true);
+        return QueueBuilder.durable(inputQueueName)
+                .withArgument("x-dead-letter-exchange", dlxName)
+                .withArgument("x-dead-letter-routing-key", inputQueueName + ".dlq")
+                .build();
     }
 
     @Bean
     public Binding binding(Queue inputQueue, DirectExchange exchange) {
         return BindingBuilder.bind(inputQueue).to(exchange).with(inputRoutingKey);
+    }
+
+    @Bean
+    public Queue inputDeadLetterQueue() {
+        return QueueBuilder.durable(inputQueueName + ".dlq").build();
+    }
+
+    @Bean
+    public Binding inputDeadLetterBinding(Queue inputDeadLetterQueue, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(inputDeadLetterQueue).to(deadLetterExchange).with(inputQueueName + ".dlq");
     }
 
     @Bean
@@ -67,6 +91,11 @@ public class RabbitConfig {
         factory.setConcurrentConsumers(50);
         factory.setMaxConcurrentConsumers(200);
         factory.setPrefetchCount(1);
+        factory.setAdviceChain(RetryInterceptorBuilder.stateless()
+                .maxAttempts(3)
+                .backOffOptions(1000, 2.0, 10000)
+                .recoverer(new RejectAndDontRequeueRecoverer())
+                .build());
         return factory;
     }
 }
