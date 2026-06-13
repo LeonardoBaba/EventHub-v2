@@ -11,6 +11,7 @@ import br.com.baba.eventHub.core.interfaces.IMessageReceive;
 import br.com.baba.eventHub.core.model.Payment;
 import br.com.baba.eventHub.core.model.Ticket;
 import br.com.baba.eventHub.core.repository.PaymentRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PaymentService implements IMessageReceive<PaymentProcessedDTO> {
 
@@ -60,12 +62,19 @@ public class PaymentService implements IMessageReceive<PaymentProcessedDTO> {
     @Override
     @Transactional
     public void processMessage(PaymentProcessedDTO paymentProcessedDTO) {
-        Optional<Payment> payment = repository.findById(paymentProcessedDTO.paymentID());
-        payment.ifPresent(p -> {
-            p.setStatus(paymentProcessedDTO.status());
-            p.setProcessedDate(paymentProcessedDTO.processedDate());
-        });
-        ticketService.updateTicketStatus(paymentProcessedDTO.ticketID(), paymentProcessedDTO.status().equals(PaymentStatusEnum.SUCCESS));
+        Optional<Payment> paymentOpt = repository.findById(paymentProcessedDTO.paymentID());
+        if (paymentOpt.isEmpty()) {
+            log.warn("Received payment.processed for unknown payment id={}", paymentProcessedDTO.paymentID());
+            return;
+        }
+        Payment payment = paymentOpt.get();
+        if (payment.getStatus() != PaymentStatusEnum.PENDING) {
+            log.info("Payment {} already processed (status={}), skipping redelivery", payment.getId(), payment.getStatus());
+            return;
+        }
+        payment.setStatus(paymentProcessedDTO.status());
+        payment.setProcessedDate(paymentProcessedDTO.processedDate());
+        ticketService.updateTicketStatus(paymentProcessedDTO.ticketID(), paymentProcessedDTO.status() == PaymentStatusEnum.SUCCESS);
     }
 
     @Scheduled(fixedRate = 60000 * 5)
