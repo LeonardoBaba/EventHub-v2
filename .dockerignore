@@ -1,0 +1,18 @@
+# Build artifacts
+**/target/
+
+# VCS / IDE
+.git/
+.gitignore
+.github/
+.idea/
+*.iml
+
+# Local config and secrets (never needed at build time)
+.env
+*.env
+docker-compose*.yml
+
+# Docs and tooling
+**/*.md
+.claude/
