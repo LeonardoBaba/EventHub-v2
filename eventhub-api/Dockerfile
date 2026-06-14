@@ -23,4 +23,7 @@ ENV API_SERVER_PORT=${API_SERVER_PORT}
 
 USER app
 
+HEALTHCHECK --interval=10s --timeout=5s --start-period=40s --retries=5 \
+    CMD wget -qO- "http://localhost:${API_SERVER_PORT}/actuator/health" || exit 1
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
