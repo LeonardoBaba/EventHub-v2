@@ -14,9 +14,13 @@ RUN mvn -pl eventhub-api -am clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-COPY --from=build /app/eventhub-api/target/*.jar app.jar
+RUN addgroup -S app && adduser -S app -G app
+
+COPY --from=build --chown=app:app /app/eventhub-api/target/*.jar app.jar
 
 ARG API_SERVER_PORT
 ENV API_SERVER_PORT=${API_SERVER_PORT}
+
+USER app
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

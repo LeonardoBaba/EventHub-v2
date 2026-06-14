@@ -14,9 +14,13 @@ RUN mvn -pl eventHub-payments -am clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-COPY --from=build /app/eventHub-payments/target/*.jar app.jar
+RUN addgroup -S app && adduser -S app -G app
+
+COPY --from=build --chown=app:app /app/eventHub-payments/target/*.jar app.jar
 
 ARG PAYMENTS_SERVER_PORT
 ENV PAYMENTS_SERVER_PORT=${PAYMENTS_SERVER_PORT}
+
+USER app
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
