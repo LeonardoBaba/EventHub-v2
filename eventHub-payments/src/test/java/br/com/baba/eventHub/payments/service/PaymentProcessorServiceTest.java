@@ -65,7 +65,7 @@ class PaymentProcessorServiceTest {
         PaymentTransaction savedTransaction = transactionCaptor.getValue();
         assertEquals(ticketId, savedTransaction.getTicketId());
         assertEquals(paymentId, savedTransaction.getPaymentId());
-        assertEquals("token-789", savedTransaction.getCardToken());
+        assertEquals("****-789", savedTransaction.getCardToken());
         assertEquals(1, savedTransaction.getInstallments());
         assertEquals(5000, savedTransaction.getPrice());
         assertTrue(savedTransaction.getStatus() == PaymentStatusEnum.SUCCESS || savedTransaction.getStatus() == PaymentStatusEnum.FAILED);

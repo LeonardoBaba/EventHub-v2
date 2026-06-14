@@ -5,6 +5,7 @@ import br.com.baba.eventHub.payments.core.dto.TicketPurchaseDTO;
 import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
 import br.com.baba.eventHub.payments.core.model.PaymentTransaction;
 import br.com.baba.eventHub.payments.core.repository.PaymentTransactionRepository;
+import br.com.baba.eventHub.payments.core.util.CardTokenMasker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -55,7 +56,7 @@ public class PaymentProcessorService {
 
             PaymentStatusEnum status = ThreadLocalRandom.current().nextBoolean() ? PaymentStatusEnum.SUCCESS : PaymentStatusEnum.FAILED;
             transaction = new PaymentTransaction(
-                    dto.ticketID(), dto.paymentID(), dto.cardToken(),
+                    dto.ticketID(), dto.paymentID(), CardTokenMasker.mask(dto.cardToken()),
                     dto.installments(), dto.price(), status
             );
 

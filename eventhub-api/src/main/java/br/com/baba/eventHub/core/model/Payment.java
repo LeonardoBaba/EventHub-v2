@@ -2,6 +2,7 @@ package br.com.baba.eventHub.core.model;
 
 import br.com.baba.eventHub.core.dto.TicketFormDTO;
 import br.com.baba.eventHub.core.enums.PaymentStatusEnum;
+import br.com.baba.eventHub.core.util.CardTokenMasker;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,7 +47,7 @@ public class Payment {
         this.ticket = ticket;
         this.creationDate = LocalDateTime.now();
         this.status = PaymentStatusEnum.PENDING;
-        this.cardToken = ticketFormDTO.cardToken();
+        this.cardToken = CardTokenMasker.mask(ticketFormDTO.cardToken());
         this.installments = ticketFormDTO.installments();
         this.price = ticket.getEvent().getPrice();
     }
