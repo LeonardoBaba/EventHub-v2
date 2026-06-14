@@ -8,6 +8,10 @@ services:
     ports:
       - "${PAYMENTS_PORT}:${PAYMENTS_PORT}"
 
+  prometheus:
+    ports:
+      - "9090:9090"
+
 # Make proxy-net a locally-created network in dev instead of requiring a
 networks:
   proxy-net:

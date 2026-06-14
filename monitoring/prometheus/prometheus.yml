@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'eventhub-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eventhub-api-v2:15500']
+
+  - job_name: 'eventhub-payments'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eventhub-payments-v2:15550']

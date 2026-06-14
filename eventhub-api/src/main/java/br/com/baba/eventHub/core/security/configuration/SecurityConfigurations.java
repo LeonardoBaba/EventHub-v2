@@ -44,7 +44,7 @@ public class SecurityConfigurations {
                             req.requestMatchers(HttpMethod.POST, "/login").permitAll();
                             req.requestMatchers(HttpMethod.POST, "/api/users").permitAll();
                             req.requestMatchers(HttpMethod.GET, "/api/events").permitAll();
-                            req.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll();
+                            req.requestMatchers(HttpMethod.GET, "/actuator/**").permitAll();
                             req.requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll();
                             req.anyRequest().authenticated();
                         })

@@ -45,13 +45,13 @@ jobs:
           sed -i 's|image: eventhub-api-v2:latest|image: ${{ secrets.DOCKER_USERNAME }}/eventhub-api:latest|g' docker-compose.yml
           sed -i 's|image: eventhub-payments-v2:latest|image: ${{ secrets.DOCKER_USERNAME }}/eventhub-payments:latest|g' docker-compose.yml
 
-      - name: Copy docker-compose to VPS
+      - name: Copy docker-compose and monitoring config to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,monitoring"
           target: "/root/eventhub-v2"
           overwrite: true
 

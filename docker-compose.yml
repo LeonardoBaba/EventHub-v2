@@ -41,6 +41,7 @@ services:
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/eventhub-payments?authSource=admin
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -113,10 +114,39 @@ services:
     networks:
       - eventhub-net
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: eventhub-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - eventhub-net
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    container_name: eventhub-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - eventhub-net
+
 volumes:
   postgres_data:
   mongodb_data:
   rabbitmq_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   eventhub-net:
