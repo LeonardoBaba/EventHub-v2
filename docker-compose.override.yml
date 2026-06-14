@@ -1,0 +1,14 @@
+# Dev-only overrides, auto-loaded by `docker compose up`.
+services:
+  eventhub-api:
+    ports:
+      - "${API_PORT}:${API_PORT}"
+
+  eventhub-payments:
+    ports:
+      - "${PAYMENTS_PORT}:${PAYMENTS_PORT}"
+
+# Make proxy-net a locally-created network in dev instead of requiring a
+networks:
+  proxy-net:
+    external: false
