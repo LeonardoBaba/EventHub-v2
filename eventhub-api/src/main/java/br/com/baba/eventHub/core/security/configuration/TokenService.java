@@ -22,7 +22,7 @@ public class TokenService {
             var algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
                     .withIssuer("EventHub")
-                    .withSubject(user.getName())
+                    .withSubject(user.getId().toString())
                     .withExpiresAt(expirationDate())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {

@@ -1,4 +1,4 @@
-package br.com.baba.eventHub.payments.core.dto;
+package br.com.baba.eventHub.contracts;
 
 import java.util.UUID;
 

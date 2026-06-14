@@ -1,6 +1,6 @@
 package br.com.baba.eventHub.payments.core.model;
 
-import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
+import br.com.baba.eventHub.contracts.PaymentStatusEnum;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;

@@ -1,6 +1,4 @@
-package br.com.baba.eventHub.payments.core.dto;
-
-import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
+package br.com.baba.eventHub.contracts;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

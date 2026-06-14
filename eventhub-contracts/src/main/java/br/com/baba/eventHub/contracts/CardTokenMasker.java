@@ -1,4 +1,4 @@
-package br.com.baba.eventHub.payments.core.util;
+package br.com.baba.eventHub.contracts;
 
 public final class CardTokenMasker {
 

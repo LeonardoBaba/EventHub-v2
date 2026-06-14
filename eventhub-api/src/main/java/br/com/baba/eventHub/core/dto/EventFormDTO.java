@@ -1,5 +1,6 @@
 package br.com.baba.eventHub.core.dto;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,6 +13,7 @@ public record EventFormDTO(
         String description,
 
         @NotNull
+        @Future
         LocalDateTime date,
 
         @NotNull

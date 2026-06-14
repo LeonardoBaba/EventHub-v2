@@ -13,6 +13,7 @@
     <name>EventHub V2</name>
 
     <modules>
+        <module>eventhub-contracts</module>
         <module>eventhub-api</module>
         <module>eventHub-payments</module>
     </modules>

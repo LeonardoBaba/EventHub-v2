@@ -1,9 +1,9 @@
 package br.com.baba.eventHub.core.service;
 
-import br.com.baba.eventHub.core.dto.PaymentProcessedDTO;
+import br.com.baba.eventHub.contracts.PaymentProcessedDTO;
+import br.com.baba.eventHub.contracts.PaymentStatusEnum;
+import br.com.baba.eventHub.contracts.TicketPurchaseDTO;
 import br.com.baba.eventHub.core.dto.TicketFormDTO;
-import br.com.baba.eventHub.core.dto.TicketPurchaseDTO;
-import br.com.baba.eventHub.core.enums.PaymentStatusEnum;
 import br.com.baba.eventHub.core.enums.RabbitQueueEnum;
 import br.com.baba.eventHub.core.enums.RoutingKeyEnum;
 import br.com.baba.eventHub.core.interfaces.IMessage;
@@ -42,7 +42,9 @@ public class PaymentService implements IMessageReceive<PaymentProcessedDTO> {
     public void processPayment(Ticket ticket, TicketFormDTO ticketFormDTO) {
         Payment payment = new Payment(ticket, ticketFormDTO);
         repository.save(payment);
-        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO(payment);
+        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO(
+                payment.getTicket().getId(), payment.getId(), payment.getCardToken(),
+                payment.getInstallments(), payment.getPrice());
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {

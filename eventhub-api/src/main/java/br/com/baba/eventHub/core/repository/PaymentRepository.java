@@ -1,6 +1,6 @@
 package br.com.baba.eventHub.core.repository;
 
-import br.com.baba.eventHub.core.enums.PaymentStatusEnum;
+import br.com.baba.eventHub.contracts.PaymentStatusEnum;
 import br.com.baba.eventHub.core.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 

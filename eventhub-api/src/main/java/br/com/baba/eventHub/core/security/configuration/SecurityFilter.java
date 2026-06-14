@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -37,7 +38,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             var tokenJWT = recoverToken(request);
             if (tokenJWT != null) {
                 var subject = tokenService.getSubject(tokenJWT);
-                User user = userRepository.findByName(subject);
+                User user = findUserById(subject);
                 if (user == null) {
                     throw new UsernameNotFoundException("User not found");
                 }
@@ -47,6 +48,14 @@ public class SecurityFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (JWTVerificationException | UsernameNotFoundException e) {
             handlerExceptionResolver.resolveException(request, response, null, e);
+        }
+    }
+
+    private User findUserById(String subject) {
+        try {
+            return userRepository.findById(UUID.fromString(subject)).orElse(null);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 

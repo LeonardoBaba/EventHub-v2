@@ -1,8 +1,8 @@
 package br.com.baba.eventHub.payments.service;
 
-import br.com.baba.eventHub.payments.core.dto.PaymentProcessedDTO;
-import br.com.baba.eventHub.payments.core.dto.TicketPurchaseDTO;
-import br.com.baba.eventHub.payments.core.enums.PaymentStatusEnum;
+import br.com.baba.eventHub.contracts.PaymentProcessedDTO;
+import br.com.baba.eventHub.contracts.PaymentStatusEnum;
+import br.com.baba.eventHub.contracts.TicketPurchaseDTO;
 import br.com.baba.eventHub.payments.core.model.PaymentTransaction;
 import br.com.baba.eventHub.payments.core.repository.PaymentTransactionRepository;
 import org.junit.jupiter.api.BeforeEach;

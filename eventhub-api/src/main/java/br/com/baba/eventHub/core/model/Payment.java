@@ -1,8 +1,8 @@
 package br.com.baba.eventHub.core.model;
 
 import br.com.baba.eventHub.core.dto.TicketFormDTO;
-import br.com.baba.eventHub.core.enums.PaymentStatusEnum;
-import br.com.baba.eventHub.core.util.CardTokenMasker;
+import br.com.baba.eventHub.contracts.PaymentStatusEnum;
+import br.com.baba.eventHub.contracts.CardTokenMasker;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
