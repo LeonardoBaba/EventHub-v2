@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,7 +43,12 @@ public class PaymentService implements IMessageReceive<PaymentProcessedDTO> {
         Payment payment = new Payment(ticket, ticketFormDTO);
         repository.save(payment);
         TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO(payment);
-        messageService.send(ticketPurchaseDTO, RoutingKeyEnum.PAYMENT_CREATED);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messageService.send(ticketPurchaseDTO, RoutingKeyEnum.PAYMENT_CREATED);
+            }
+        });
     }
 
     @Override

@@ -19,6 +19,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
+
+@Slf4j
 @Configuration
 public class RabbitConfig {
 
@@ -30,6 +35,12 @@ public class RabbitConfig {
 
     @Value("${mq.routing.key.input}")
     private String inputRoutingKey;
+
+    @Value("${mq.queue.output}")
+    private String outputQueueName;
+
+    @Value("${mq.routing.key.output}")
+    private String outputRoutingKey;
 
     @Value("${mq.dlx.name}")
     private String dlxName;
@@ -45,6 +56,16 @@ public class RabbitConfig {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter());
+        template.setMandatory(true);
+        template.setConfirmCallback((correlation, ack, cause) -> {
+            if (!ack) {
+                log.error("Publish nacked by broker: cause={} correlation={}", cause, correlation);
+            }
+        });
+        template.setReturnsCallback(returned ->
+                log.error("Message returned (unroutable): exchange={} routingKey={} replyText={} body={}",
+                        returned.getExchange(), returned.getRoutingKey(), returned.getReplyText(),
+                        new String(returned.getMessage().getBody(), StandardCharsets.UTF_8)));
         return template;
     }
 
@@ -79,6 +100,29 @@ public class RabbitConfig {
     @Bean
     public Binding inputDeadLetterBinding(Queue inputDeadLetterQueue, DirectExchange deadLetterExchange) {
         return BindingBuilder.bind(inputDeadLetterQueue).to(deadLetterExchange).with(inputQueueName + ".dlq");
+    }
+
+    @Bean
+    public Queue outputQueue() {
+        return QueueBuilder.durable(outputQueueName)
+                .withArgument("x-dead-letter-exchange", dlxName)
+                .withArgument("x-dead-letter-routing-key", outputQueueName + ".dlq")
+                .build();
+    }
+
+    @Bean
+    public Binding outputBinding(Queue outputQueue, DirectExchange exchange) {
+        return BindingBuilder.bind(outputQueue).to(exchange).with(outputRoutingKey);
+    }
+
+    @Bean
+    public Queue outputDeadLetterQueue() {
+        return QueueBuilder.durable(outputQueueName + ".dlq").build();
+    }
+
+    @Bean
+    public Binding outputDeadLetterBinding(Queue outputDeadLetterQueue, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(outputDeadLetterQueue).to(deadLetterExchange).with(outputQueueName + ".dlq");
     }
 
     @Bean
