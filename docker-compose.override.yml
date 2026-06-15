@@ -3,14 +3,22 @@ services:
   eventhub-api:
     ports:
       - "${API_SERVER_PORT}:${API_SERVER_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
 
   eventhub-payments:
     ports:
       - "${PAYMENTS_SERVER_PORT}:${PAYMENTS_SERVER_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
 
   prometheus:
     ports:
       - "9090:9090"
+
+  grafana:
+    ports:
+      - "3000:3000"
 
 # Make proxy-net a locally-created network in dev instead of requiring a
 networks:

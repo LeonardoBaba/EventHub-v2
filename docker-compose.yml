@@ -14,6 +14,7 @@ services:
       - DB_URL=jdbc:postgresql://db:5432/eventhubdb
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - SPRING_PROFILES_ACTIVE=prod
     depends_on:
       db:
         condition: service_healthy
@@ -42,6 +43,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - MONGODB_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/eventhub-payments?authSource=admin
+      - SPRING_PROFILES_ACTIVE=prod
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -118,6 +120,14 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: eventhub-prometheus
     restart: unless-stopped
+    environment:
+      - MONITORING_PASSWORD=${MONITORING_PASSWORD}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        printf '%s' "$$MONITORING_PASSWORD" > /tmp/monitoring_password
+        exec /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -128,8 +138,6 @@ services:
     image: grafana/grafana:10.4.5
     container_name: eventhub-grafana
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
@@ -140,6 +148,7 @@ services:
       - prometheus
     networks:
       - eventhub-net
+      - proxy-net
 
 volumes:
   postgres_data:
