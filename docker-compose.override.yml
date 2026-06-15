@@ -2,11 +2,11 @@
 services:
   eventhub-api:
     ports:
-      - "${API_PORT}:${API_PORT}"
+      - "${API_SERVER_PORT}:${API_SERVER_PORT}"
 
   eventhub-payments:
     ports:
-      - "${PAYMENTS_PORT}:${PAYMENTS_PORT}"
+      - "${PAYMENTS_SERVER_PORT}:${PAYMENTS_SERVER_PORT}"
 
   prometheus:
     ports:
