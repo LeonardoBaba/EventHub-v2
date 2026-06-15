@@ -22,12 +22,14 @@ https://eventhub.lbaba.com.br/swagger-ui/index.html
 ## Tecnologias
 
 - Java 21
-- Spring Boot 3.4 (Data JPA, Security, AMQP)
-- PostgreSQL
-- Flyway
-- RabbitMQ
+- Spring Boot 3.4 (Web, Data JPA, Data MongoDB, Security, AMQP, Actuator)
+- PostgreSQL + Flyway (eventos e ingressos), MongoDB (transações de pagamento)
+- RabbitMQ (mensageria assíncrona com DLQ + retry)
+- Bucket4j (rate limiting)
+- Micrometer + Prometheus + Grafana (observabilidade)
+- Caddy (reverse proxy / TLS automático)
 - Docker & Docker Compose
-- GitHub Actions
+- GitHub Actions (CI/CD)
 
 ## Estrutura do Projeto
 
@@ -36,26 +38,30 @@ serviço de processamento de pagamentos, comunicando-se de forma assíncrona.
 
 ```
 EventHub-v2/
-├── .github/workflows/     # CI/CD (Configurações do GitHub Actions)
-├── docker-compose.yml     # Orquestração dos containers (APIs, Mensageria, Bancos de Dados)
-├── pom.xml                # Configuração raiz do projeto Maven
+├── .github/workflows/         # CI/CD (Configurações do GitHub Actions)
+├── docker-compose.yml         # Orquestração dos containers (base / produção)
+├── docker-compose.override.yml # Overrides de dev (carregado automaticamente localmente)
+├── monitoring/                # Config de scrape do Prometheus + provisioning do Grafana
+├── pom.xml                    # Configuração raiz do projeto Maven
 │
-├── eventhub-api/          # Serviço Principal (REST API)
+├── eventhub-contracts/        # Módulo compartilhado: DTOs + enums do contrato entre serviços
+│
+├── eventhub-api/              # Serviço Principal (REST API)
 │   ├── Dockerfile
 │   └── src/
 │       ├── main/java/br/com/baba/eventHub/
-│       │   ├── api/       # Entrypoints REST: Controllers, Handlers e Configurações (CORS)
-│       │   └── core/      # Domínio: Models, Repositories, Services, Security (JWT) e DTOs
+│       │   ├── api/           # Entrypoints REST: Controllers, Handlers, Filters, Config (CORS)
+│       │   └── core/          # Domínio: Models, Repositories, Services, Security (JWT) e DTOs
 │       └── main/resources/
-│           └── db/migration/ # Scripts de migração de banco de dados (Flyway)
+│           └── db/migration/  # Scripts de migração de banco de dados (Flyway)
 │
-└── eventHub-payments/     # Serviço worker para processamento de pagamentos
+└── eventHub-payments/         # Serviço worker para processamento de pagamentos
     ├── Dockerfile
     └── src/
         └── main/java/br/com/baba/eventHub/payments/
-            ├── config/    # Configurações de mensageria (RabbitMQ)
-            ├── core/      # Domínio específico de pagamentos: Models, DTOs e Repositories
-            └── service/   # Regras de negócio e processamento de filas
+            ├── config/        # Configurações de mensageria (RabbitMQ)
+            ├── core/          # Domínio específico de pagamentos: Models, DTOs e Repositories
+            └── service/       # Regras de negócio e processamento de filas
 ```
 
 ## Como Executar
@@ -78,26 +84,40 @@ cd eventhub-v2
 
 Crie um arquivo `.env` na raiz do projeto e preencha com as variáveis abaixo:
 
-| **Variável**            | **Exemplo**                                                            |
-|-------------------------|------------------------------------------------------------------------|
-| `API_PORT`              | `15000`                                                                |
-| `PAYMENTS_PORT`         | `15001`                                                                |
-| `DB_USERNAME`           | `postgres`                                                             |
-| `DB_PASSWORD`           | `postgres`                                                             |
-| `JWT_SECRET`            | `seu_segredo_jwt_super_seguro`                                         |
-| `RABBITMQ_USER`         | `guest`                                                                |
-| `RABBITMQ_PASSWORD`     | `guest`                                                                |
-| `MONGO_ROOT_USER`       | `root`                                                                 |
-| `MONGO_ROOT_PASSWORD`   | `root`                                                                 |
-| `MONGODB_URI`           | `mongodb://root:root@mongodb:27017/eventhub-payments?authSource=admin` |
-| `MQ_EXCHANGE_NAME`      | `eventhub.exchange`                                                    |
-| `MQ_QUEUE_INPUT`        | `eventhub.payment.created`                                             |
-| `MQ_QUEUE_OUTPUT`       | `eventhub.payment.processed`                                           |
-| `MQ_ROUTING_KEY_INPUT`  | `payment.created`                                                      |
-| `MQ_ROUTING_KEY_OUTPUT` | `payment.processed`                                                    |
+| **Variável**             | **Exemplo**                                                            | **Notas**                                          |
+|--------------------------|------------------------------------------------------------------------|----------------------------------------------------|
+| `SPRING_PROFILES_ACTIVE` | `dev`                                                                  | `dev` ou `prod`                                    |
+| `API_SERVER_PORT`        | `15500`                                                                |                                                    |
+| `PAYMENTS_SERVER_PORT`   | `15550`                                                                |                                                    |
+| `DB_URL`                 | `jdbc:postgresql://db:5432/eventhubdb`                                 | sobrescrita pela compose                           |
+| `DB_USERNAME`            | `postgres`                                                             |                                                    |
+| `DB_PASSWORD`            | `postgres`                                                             |                                                    |
+| `JWT_SECRET`             | `seu_segredo_jwt_super_seguro`                                         |                                                    |
+| `RABBITMQ_HOST`          | `rabbitmq`                                                             | sobrescrita pela compose                           |
+| `RABBITMQ_PORT`          | `5672`                                                                 |                                                    |
+| `RABBITMQ_USER`          | `guest`                                                                |                                                    |
+| `RABBITMQ_PASSWORD`      | `guest`                                                                |                                                    |
+| `MONGO_ROOT_USER`        | `root`                                                                 |                                                    |
+| `MONGO_ROOT_PASSWORD`    | `root`                                                                 |                                                    |
+| `MONGODB_URI`            | `mongodb://root:root@mongodb:27017/eventhub-payments?authSource=admin` | sobrescrita pela compose                           |
+| `ADMIN_CREDENTIALS`      | `Admin:troque_isto`                                                    | **obrigatória** — `nome:senha`, bootstrap do admin |
+| `ADMIN_EMAIL`            | `admin@example.com`                                                    | **obrigatória**                                    |
+| `ADMIN_CPF`              | `11144477735`                                                          | **obrigatória** — CPF válido                       |
+| `MONITORING_USER`        | `monitoring`                                                           | usuário do basic auth do `/actuator`               |
+| `MONITORING_PASSWORD`    | `troque_isto`                                                          | **obrigatória**                                    |
+| `GRAFANA_USER`           | `admin`                                                                | login do Grafana                                   |
+| `GRAFANA_PASSWORD`       | `admin`                                                                | login do Grafana                                   |
+| `FRONTEND_URL`           | `http://localhost:3000`                                               | origem permitida no CORS                           |
+| `MQ_DLX_NAME`            | `eventhub.dlx`                                                         | opcional (tem default)                             |
+| `RATELIMIT_RPM`          | `10`                                                                   | opcional (tem default)                             |
+| `MQ_EXCHANGE_NAME`       | `eventhub.exchange`                                                    | opcional (tem default)                             |
+| `MQ_QUEUE_INPUT`         | `eventhub.payment.created`                                             | opcional (tem default)                             |
+| `MQ_QUEUE_OUTPUT`        | `eventhub.payment.processed`                                           | opcional (tem default)                             |
+| `MQ_ROUTING_KEY_INPUT`   | `payment.created`                                                      | opcional (tem default)                             |
+| `MQ_ROUTING_KEY_OUTPUT`  | `payment.processed`                                                    | opcional (tem default)                             |
 
-*(Nota: As variáveis de MQ (filas e roteamento) já possuem valores padrão no código, mas podem ser sobrescritas
-no `.env`)*
+*(As variáveis marcadas como **obrigatória** fazem o app falhar no startup (fail-fast) se ausentes. As "opcionais"
+já têm default no código; valores de mensageria/host são sobrescritos pela Docker Compose em runtime.)*
 
 ### Executar
 
@@ -108,9 +128,25 @@ docker compose up -d --build
 ```
 
 Isso fará o build das imagens da API e do serviço de Pagamentos, e subirá todos os serviços adjacentes (PostgreSQL,
-MongoDB e RabbitMQ).
+MongoDB, RabbitMQ, Prometheus e Grafana).
 
-Você poderá acessar a documentação da API via Swagger localmente em: `http://localhost:15000/swagger-ui/index.html`
+Você poderá acessar a documentação da API via Swagger localmente em: `http://localhost:15500/swagger-ui/index.html`
+
+## Observabilidade
+
+A stack já vem com métricas prontas:
+
+- **Spring Boot Actuator** expõe `/actuator/health` (usado pelos healthchecks dos containers) e
+  `/actuator/prometheus`. Em produção este último é protegido por HTTP Basic auth (`MONITORING_USER` /
+  `MONITORING_PASSWORD`).
+- **Prometheus** raspa os dois serviços e guarda as séries temporais. Localmente fica em
+  `http://localhost:9090` (não é publicado em produção — só acessível dentro da rede Docker).
+- **Grafana** visualiza tudo (datasource + dashboard "EventHub Overview" auto-provisionados):
+  - Local: `http://localhost:3000` (login `GRAFANA_USER` / `GRAFANA_PASSWORD`).
+  - Produção: atrás do Caddy em `https://grafana.lbaba.com.br`.
+
+Os profiles `dev` e `prod` (`SPRING_PROFILES_ACTIVE`) controlam quanto o Actuator expõe —
+relaxado em dev, endurecido em prod.
 
 ## Deploy
 
